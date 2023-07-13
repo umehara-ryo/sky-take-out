@@ -91,14 +91,15 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         //passwordconstant　という　パスワード定数で
         // デフォルトのパスワードを取り出す
-        employee.setCreateTime(LocalDateTime.now());
-        employee.setUpdateTime(LocalDateTime.now());
+
+//        employee.setCreateTime(LocalDateTime.now());
+//        employee.setUpdateTime(LocalDateTime.now());
 
         //取出存在ThreadLocal里的id
 
-        Long empId = BaseContext.getCurrentId();
-        employee.setCreateUser(empId);
-        employee.setUpdateUser(empId);
+//        Long empId = BaseContext.getCurrentId();
+//        employee.setCreateUser(empId);
+//        employee.setUpdateUser(empId);
         employeeMapper.insert(employee);
 
 
@@ -125,7 +126,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = Employee.builder()
                 .status(status)
                 .id(id)
-                .updateTime(LocalDateTime.now())
+//                .updateTime(LocalDateTime.now()) 加了切面注入 已不需要自己代入
                 .build();
         //使用Bulider创建一个实体对象
         employeeMapper.update(employee);
@@ -142,8 +143,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void update(EmployeeDTO employeeDTO) {
         Employee employee = Employee.builder()
-                .updateUser(BaseContext.getCurrentId())
-                .updateTime(LocalDateTime.now())
+//                .updateUser(BaseContext.getCurrentId())
+//                .updateTime(LocalDateTime.now())  加了切面注入 已不需要自己代入
                 .build();
         BeanUtils.copyProperties(employeeDTO,employee);
         employeeMapper.update(employee);
