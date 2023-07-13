@@ -16,6 +16,7 @@ import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
 import com.sky.result.PageResult;
 import com.sky.service.EmployeeService;
+import io.swagger.models.properties.UntypedProperty;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,11 +79,15 @@ public class EmployeeServiceImpl implements EmployeeService {
         //オブジェクトのプロパティをコピーし、
         // dto をエンティティ クラスに転送します
         // .前後のプロパティは一致しないと
-        BeanUtils.copyProperties(employeeDTO, employee);//前はソース（源）、後ろはターゲット（目標）
+        BeanUtils.copyProperties(employeeDTO, employee);
+        //前はソース（源）、後ろはターゲット（目標）
 
         employee.setStatus(StatusConstant.ENABLE);
         //コンスタント：定数、常数、不変数
-        employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes(StandardCharsets.UTF_8)));
+        employee.setPassword
+                (DigestUtils.md5DigestAsHex
+                        (PasswordConstant.DEFAULT_PASSWORD
+                                .getBytes(StandardCharsets.UTF_8)));
 
         //passwordconstant　という　パスワード定数で
         // デフォルトのパスワードを取り出す
@@ -123,6 +128,24 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .updateTime(LocalDateTime.now())
                 .build();
         //使用Bulider创建一个实体对象
+        employeeMapper.update(employee);
+    }
+
+    @Override
+    public Employee getById(Long id) {
+        Employee employee = employeeMapper.getById(id);
+        employee.setPassword("****");
+        //给前端显示的密码是****
+        return employee;
+    }
+
+    @Override
+    public void update(EmployeeDTO employeeDTO) {
+        Employee employee = Employee.builder()
+                .updateUser(BaseContext.getCurrentId())
+                .updateTime(LocalDateTime.now())
+                .build();
+        BeanUtils.copyProperties(employeeDTO,employee);
         employeeMapper.update(employee);
     }
 

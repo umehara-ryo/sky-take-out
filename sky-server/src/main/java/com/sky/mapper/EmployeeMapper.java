@@ -30,4 +30,13 @@ public interface EmployeeMapper {
 
     //根据主键动态修改sql
     void update(Employee employee);
+
+
+
+    //根据id查询
+    @Select("select * from employee where id = #{id}")
+    Employee getById(Long id);
+
+
+
 }

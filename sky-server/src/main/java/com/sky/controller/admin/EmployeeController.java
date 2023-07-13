@@ -49,7 +49,6 @@ public class EmployeeController {
         Employee employee = employeeService.login(employeeLoginDTO);
 
 
-
         //登录成功后，生成jwt令牌
         Map<String, Object> claims = new HashMap<>();
         claims.put(JwtClaimsConstant.EMP_ID, employee.getId());
@@ -83,8 +82,8 @@ public class EmployeeController {
     //新增员工
     @PostMapping
     @ApiOperation("新增员工")
-    public  Result<String> save(@RequestBody EmployeeDTO employeeDTO){
-        log.info("新增员工 : {}",employeeDTO);
+    public Result<String> save(@RequestBody EmployeeDTO employeeDTO) {
+        log.info("新增员工 : {}", employeeDTO);
         employeeService.save(employeeDTO);
         return Result.success();
     }
@@ -92,18 +91,36 @@ public class EmployeeController {
     //分页查询              JOSNフォーマットのデータではないので、@Request加える必要がなくても、順調ににラップできます
     @GetMapping("/page")
     @ApiOperation("ページ別でクエリ")
-    public  Result<PageResult> page(EmployeePageQueryDTO employeePageQueryDTO){
-        log.info("ページ別でクエリ : {}",employeePageQueryDTO );
+    public Result<PageResult> page(EmployeePageQueryDTO employeePageQueryDTO) {
+        log.info("ページ別でクエリ : {}", employeePageQueryDTO);
         PageResult pageResult = employeeService.pageQuery(employeePageQueryDTO);
         return Result.success(pageResult);
     }
 
-@PostMapping("/status/{status}")
-@ApiOperation("従業員アカウントの無効有効化")
-    public Result startOrStop(@PathVariable Integer status, Long id){
-        log.info("従業員アカウントの無効有効化:{},{}",status,id);
-        employeeService.startOrStop(status,id);
 
+
+
+    @PostMapping("/status/{status}")//id不是body体json可以直接被接受
+    @ApiOperation("従業員アカウントの無効有効化")
+    public Result startOrStop(@PathVariable Integer status, Long id) {
+        log.info("従業員アカウントの無効有効化:{},{}", status, id);
+        employeeService.startOrStop(status, id);
+
+        return Result.success();
+    }
+
+    @GetMapping("/{id}")
+    @ApiOperation("Idでデータをクエリ")
+    public Result<Employee> getById(@PathVariable Long id){
+        Employee employee = employeeService.getById(id);
+        return Result.success(employee);
+    }
+
+    @PutMapping
+    @ApiOperation("情報を変更する")
+    public Result update(@RequestBody EmployeeDTO employeeDTO){
+        log.info("情報を変更する {}",employeeDTO);
+        employeeService.update(employeeDTO);
         return Result.success();
     }
 
