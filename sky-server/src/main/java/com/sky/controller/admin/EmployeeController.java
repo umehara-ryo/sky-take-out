@@ -48,6 +48,8 @@ public class EmployeeController {
 
         Employee employee = employeeService.login(employeeLoginDTO);
 
+
+
         //登录成功后，生成jwt令牌
         Map<String, Object> claims = new HashMap<>();
         claims.put(JwtClaimsConstant.EMP_ID, employee.getId());
@@ -94,6 +96,15 @@ public class EmployeeController {
         log.info("ページ別でクエリ : {}",employeePageQueryDTO );
         PageResult pageResult = employeeService.pageQuery(employeePageQueryDTO);
         return Result.success(pageResult);
+    }
+
+@PostMapping("/status/{status}")
+@ApiOperation("従業員アカウントの無効有効化")
+    public Result startOrStop(@PathVariable Integer status, Long id){
+        log.info("従業員アカウントの無効有効化:{},{}",status,id);
+        employeeService.startOrStop(status,id);
+
+        return Result.success();
     }
 
 }
