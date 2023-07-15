@@ -10,4 +10,13 @@
         values (#{categoryId}, #{name}, #{price}, #{description}, #{image}, #{createTime}, #{updateTime}, #{createUser},
                 #{updateUser})
     </insert>
+    <select id="pageQuery" resultType="com.sky.vo.SetmealVO">
+        select s.*,c.name categoryName from setmeal s , category c
+        <where>
+            <if test="name != null">name like concat('%',#{name},'%')</if>
+            <if test="status != null">status = #{status}</if>
+            <if test="categoryId != null">categoryId = #{categoryId}</if>
+        </where>
+        order by create_time desc
+    </select>
 </mapper>
