@@ -62,7 +62,7 @@ public class SetmealServiceImpl implements SetmealService {
                 //判断是否停用
                 Long dishId = setmealDish.getDishId();
                 Dish dish = dishMapper.getById(dishId);
-                if(dish.getStatus().equals(StatusConstant.DISABLE)){
+                if (dish.getStatus().equals(StatusConstant.DISABLE)) {
                     throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ENABLE_FAILED);
                 }
                 setmealDish.setSetmealId(setmealId);
@@ -83,7 +83,7 @@ public class SetmealServiceImpl implements SetmealService {
         Page<SetmealVO> page = setmealMapper.pageQuery(setmealPageQueryDTO);
 
 
-        return new PageResult(page.getTotal(),page.getResult());
+        return new PageResult(page.getTotal(), page.getResult());
     }
 
     @Override
@@ -93,7 +93,7 @@ public class SetmealServiceImpl implements SetmealService {
         for (Long id : ids) {
             Setmeal setmeal = setmealMapper.getById(id);
             //1.按id查询出套餐
-            if(setmeal.getStatus().equals(StatusConstant.ENABLE)){
+            if (setmeal.getStatus().equals(StatusConstant.ENABLE)) {
                 //2.判断套餐是否启用
                 throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ON_SALE);
             }
@@ -119,7 +119,7 @@ public class SetmealServiceImpl implements SetmealService {
                 .setmealDishes(setmealDishes)
                 .build();
 
-        BeanUtils.copyProperties(setmeal,setmealVO);
+        BeanUtils.copyProperties(setmeal, setmealVO);
         return setmealVO;
     }
 
@@ -129,8 +129,10 @@ public class SetmealServiceImpl implements SetmealService {
         //0.事务开启
 
         //1.更新setmeal表
-       Setmeal setmeal = new Setmeal();
-      BeanUtils.copyProperties(setmealDTO,setmeal);
+        Setmeal setmeal = new Setmeal();
+        BeanUtils.copyProperties(setmealDTO, setmeal);
+        setmeal.setStatus(StatusConstant.DISABLE);
+        //更新后自动停售
         setmealMapper.update(setmeal);
 
         //2.根据setmealId删除set_dish表里的数据
@@ -143,17 +145,35 @@ public class SetmealServiceImpl implements SetmealService {
             //判断套餐是否有菜品
             //TODO 未販売の料理は追加できません
             for (SetmealDish setmealDish : setmealDishes) {
-
-                /*//判断是否停用
-                Long dishId = setmealDish.getDishId();
-                Dish dish = dishMapper.getById(dishId);
-                if(dish.getStatus().equals(StatusConstant.DISABLE)) {
-                    throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ENABLE_FAILED);
-                }*/
                 setmealDish.setSetmealId(setmealDTO.getId());
             }
             setmealDishMapper.insertBatch(setmealDishes);
         }
+    }
+
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        Setmeal setmeal = new Setmeal();
+        setmeal.setStatus(status);
+        setmeal.setId(id);
+
+        List<SetmealDish> setmealDishes = setmealDishMapper.getBySetmealId(id);
+
+        if (status == StatusConstant.ENABLE) {
+            //判断是否有停售商品
+            //TODO 未販売の料理は追加できません
+            for (SetmealDish setmealDish : setmealDishes) {
+                //判断是否停用
+                Dish dish = dishMapper.getById(setmealDish.getDishId());
+                //拿到dishId,通过dishId获取dish对象再获取status
+                if (dish.getStatus().equals(StatusConstant.DISABLE)) {
+                    throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+                }
+            }
+        }
+
+        //无异常则正常启停
+        setmealMapper.update(setmeal);
     }
 
 
