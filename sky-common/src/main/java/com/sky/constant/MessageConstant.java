@@ -20,7 +20,7 @@ public class MessageConstant {
     public static final String SETMEAL_ENABLE_FAILED = "套餐内包含未启售菜品，无法启售";
     public static final String PASSWORD_EDIT_FAILED = "密码修改失败";
     public static final String DISH_ON_SALE = "販売中の料理は削除できません";
-    public static final String SETMEAL_ON_SALE = "起售中的套餐不能删除";
+    public static final String SETMEAL_ON_SALE = "提供されているプランは削除できません";
     public static final String DISH_BE_RELATED_BY_SETMEAL = "現在の料理は定食に関連付けられており、削除できません";
     public static final String ORDER_STATUS_ERROR = "订单状态错误";
     public static final String ORDER_NOT_FOUND = "订单不存在";

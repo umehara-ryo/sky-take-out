@@ -85,4 +85,39 @@ public class SetmealServiceImpl implements SetmealService {
 
         return new PageResult(total,result);
     }
+
+    @Override
+    @Transactional//1.事務起動
+    public void deleteBatch(List<Long> ids) {
+
+
+        for (Long id : ids) {
+            Setmeal setmeal = setmealMapper.getById(id);
+            //1.按id查询出套餐
+            if(setmeal.getStatus().equals(StatusConstant.ENABLE)){
+                //2.判断套餐是否启用
+                throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ON_SALE);
+            }
+            //3..删除setmeal表
+            setmealMapper.deleteById(id);
+
+            //4.删除setmeal_dish表
+            setmealDishMapper.deleteBySetmealId(id);
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+
+
 }
