@@ -145,7 +145,6 @@ public class DishServiceImpl implements DishService {
         dishFlavorMapper.deleteByDishId(dishId);
 
         //2.2新增新的口味
-
         List<DishFlavor> flavors = dishDTO.getFlavors();
         //此时获得的falvors对象中无dishId值
 
@@ -155,6 +154,11 @@ public class DishServiceImpl implements DishService {
             }
             dishFlavorMapper.insertBatch(flavors);
         }
+    }
 
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        Dish dish = Dish.builder().status(status).id(id).build();
+        dishMapper.update(dish);
     }
 }
