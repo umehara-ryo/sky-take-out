@@ -72,6 +72,7 @@ public class DishServiceImpl implements DishService {
 
         PageHelper.startPage(dishPageQueryDTO.getPage(),
                 dishPageQueryDTO.getPageSize());
+
         Page<DishVO> page = dishMapper.pageQuery(dishPageQueryDTO);
 
         return new PageResult(page.getTotal(), page.getResult());
@@ -160,5 +161,15 @@ public class DishServiceImpl implements DishService {
     public void startOrStop(Integer status, Long id) {
         Dish dish = Dish.builder().status(status).id(id).build();
         dishMapper.update(dish);
+    }
+
+    @Override
+    public List<DishVO> getByCategoryIdWithCategory(Long categoryId) {
+
+        //1.多表查询 dish表左连接category
+        List<DishVO> list = dishMapper.getByCategoryIdWithCategory(categoryId);
+
+        return list;
+
     }
 }
