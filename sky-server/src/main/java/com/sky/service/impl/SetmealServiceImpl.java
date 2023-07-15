@@ -76,20 +76,19 @@ public class SetmealServiceImpl implements SetmealService {
     public PageResult pageQuery(SetmealPageQueryDTO setmealPageQueryDTO) {
 
         //1.启用pagehelper
-        PageHelper.startPage(setmealPageQueryDTO.getPage(),setmealPageQueryDTO.getPage());
+        PageHelper.startPage(setmealPageQueryDTO.getPage(),
+                setmealPageQueryDTO.getPageSize());
 
         //2.查询setmeal表并连接category表
-        Page<SetmealVO>  page = setmealMapper.pageQuery(setmealPageQueryDTO);
-        long total = page.getTotal();
-        List<SetmealVO> result = page.getResult();
+        Page<SetmealVO> page = setmealMapper.pageQuery(setmealPageQueryDTO);
 
-        return new PageResult(total,result);
+
+        return new PageResult(page.getTotal(),page.getResult());
     }
 
     @Override
     @Transactional//1.事務起動
     public void deleteBatch(List<Long> ids) {
-
 
         for (Long id : ids) {
             Setmeal setmeal = setmealMapper.getById(id);
@@ -121,8 +120,40 @@ public class SetmealServiceImpl implements SetmealService {
                 .build();
 
         BeanUtils.copyProperties(setmeal,setmealVO);
-
         return setmealVO;
+    }
+
+    @Override
+    @Transactional
+    public void updateWithSetmealDish(SetmealDTO setmealDTO) {
+        //0.事务开启
+
+        //1.更新setmeal表
+       Setmeal setmeal = new Setmeal();
+      BeanUtils.copyProperties(setmealDTO,setmeal);
+        setmealMapper.update(setmeal);
+
+        //2.根据setmealId删除set_dish表里的数据
+        setmealDishMapper.deleteBySetmealId(setmealDTO.getId());
+
+        //3.判断是否存在未启用菜品，重新添加set_dish表的数据
+
+        List<SetmealDish> setmealDishes = setmealDTO.getSetmealDishes();
+        if (setmealDishes != null && setmealDishes.size() > 0) {
+            //判断套餐是否有菜品
+            //TODO 未販売の料理は追加できません
+            for (SetmealDish setmealDish : setmealDishes) {
+
+                /*//判断是否停用
+                Long dishId = setmealDish.getDishId();
+                Dish dish = dishMapper.getById(dishId);
+                if(dish.getStatus().equals(StatusConstant.DISABLE)) {
+                    throw new DeletionNotAllowedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+                }*/
+                setmealDish.setSetmealId(setmealDTO.getId());
+            }
+            setmealDishMapper.insertBatch(setmealDishes);
+        }
     }
 
 

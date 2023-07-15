@@ -53,10 +53,18 @@ public class SetmealController {
     @ApiOperation("根据id查询套餐")
     public Result<SetmealVO> getById(@PathVariable Long id){
         log.info("根据id查询套餐{}",id);
-
         SetmealVO setmealVO = setmealService.getByIdWithSetmealDish(id);
-
         return Result.success(setmealVO);
+    }
+
+    @PutMapping
+    @ApiOperation("セット情報の変更")
+    public Result update(@RequestBody SetmealDTO setmealDTO){
+        log.info("セット情報の変更{}",setmealDTO);
+        setmealService.updateWithSetmealDish(setmealDTO);
+        return Result.success();
+
+
     }
 
 
