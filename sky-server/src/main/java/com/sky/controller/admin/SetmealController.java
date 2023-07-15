@@ -1,6 +1,5 @@
 package com.sky.controller.admin;
 
-import com.sky.constant.StatusConstant;
 import com.sky.dto.SetmealDTO;
 import com.sky.dto.SetmealPageQueryDTO;
 import com.sky.result.PageResult;
@@ -69,9 +68,8 @@ public class SetmealController {
     @PostMapping("/status/{status}")
     @ApiOperation("套餐启用停用")
     public Result startOrStop(@PathVariable Integer status, Long id) {
-        log.info("套餐启用停用{} {}", status,id);
-        setmealService.startOrStop(status,id);
-        return  Result.success();
+        log.info("套餐启用停用{} {}", status, id);
+        setmealService.startOrStop(status, id);
+        return Result.success();
     }
-
 }

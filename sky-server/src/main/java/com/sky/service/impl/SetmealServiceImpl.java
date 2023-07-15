@@ -109,8 +109,7 @@ public class SetmealServiceImpl implements SetmealService {
     @Override
     public SetmealVO getByIdWithSetmealDish(Long id) {
 
-
-        //1.查询表semeal
+        //1.查询表setmeal
         Setmeal setmeal = setmealMapper.getById(id);
         //2.查询表setmealDish
         List<SetmealDish> setmealDishes = setmealDishMapper.getBySetmealId(id);
@@ -171,10 +170,7 @@ public class SetmealServiceImpl implements SetmealService {
                 }
             }
         }
-
         //无异常则正常启停
         setmealMapper.update(setmeal);
     }
-
-
 }
