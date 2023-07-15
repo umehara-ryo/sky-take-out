@@ -3,9 +3,11 @@ package com.sky.controller.admin;
 
 import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
+import com.sky.entity.Dish;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.DishService;
+import com.sky.vo.DishVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Info;
@@ -50,11 +52,25 @@ public class DishController {
     public Result delete(@RequestParam List<Long> ids) {  //此注解将字符串自动转化为集合（利用MVC框架）
         log.info("ディッシュを削除する{}", ids);
         dishService.deleteBatch(ids);
-
-
         return Result.success();
-
     }
+
+    @GetMapping("/{id}")
+    @ApiOperation("根据Id查询菜品")
+    public Result<DishVO> getById(@PathVariable Long id){
+        log.info("根据id查询{}",id);
+        DishVO dishVO = dishService.getByIdWithFlavor(id);
+        return Result.success(dishVO);
+    }
+
+    @PutMapping
+    @ApiOperation(value = "修改数据")
+    public Result update(@RequestBody DishDTO dishDTO) {
+        log.info("修改数据{}", dishDTO);
+        dishService.updateWithFlavor(dishDTO);
+        return Result.success();
+    }
+
 
 
 }

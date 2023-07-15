@@ -10,4 +10,6 @@
             (#{flavor.dishId},#{flavor.name},#{flavor.value})
         </foreach>
     </insert>
+
+
 </mapper>
