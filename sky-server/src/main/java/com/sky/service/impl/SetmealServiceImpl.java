@@ -138,7 +138,6 @@ public class SetmealServiceImpl implements SetmealService {
         setmealDishMapper.deleteBySetmealId(setmealDTO.getId());
 
         //3.判断是否存在未启用菜品，重新添加set_dish表的数据
-
         List<SetmealDish> setmealDishes = setmealDTO.getSetmealDishes();
         if (setmealDishes != null && setmealDishes.size() > 0) {
             //判断套餐是否有菜品
