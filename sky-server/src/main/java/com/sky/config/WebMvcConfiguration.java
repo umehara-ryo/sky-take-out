@@ -49,7 +49,7 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
         registry.addInterceptor(jwtTokenUserInterceptor)
                 .addPathPatterns("/user/**")
                 .excludePathPatterns("/user/user/login")
-                .excludePathPatterns("/user/shop/shop");//除了排除登录还要排除初始的获取店铺状态的界面
+                .excludePathPatterns("/user/shop/status");//除了排除登录还要排除初始的获取店铺状态的界面
         //todo 可能还能排除查看的选项
     }
 

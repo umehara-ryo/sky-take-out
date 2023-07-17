@@ -27,7 +27,6 @@ public class AutoFillAspect {
     @Pointcut("execution(* com.sky.mapper.*.*(..)) && @annotation(com.sky.annotation.AutoFill)")
     public void autoFillPointCut(){}
 
-
     //前置通知,为公共字段赋值
     @Before("autoFillPointCut()")
     public void autoFill(JoinPoint joinPoint){
