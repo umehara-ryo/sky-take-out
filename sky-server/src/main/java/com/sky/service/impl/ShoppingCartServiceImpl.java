@@ -119,9 +119,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 //购物车里id不重要,所以不需要取出id直接用cart
 
             }
-
-
-
         }
     }
 
