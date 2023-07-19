@@ -21,6 +21,7 @@ import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.SortParameters;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,10 +29,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
-public class OrderServiceImpl implements OrderService{
+public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderMapper orderMapper;
@@ -52,21 +54,21 @@ public class OrderServiceImpl implements OrderService{
 
         //处理业务异常（1.地址簿为空 2.购物车数据为空）
         AddressBook addressBook = addressBookMapper.getById(ordersSubmitDTO.getAddressBookId());
-        if(addressBook == null){
+        if (addressBook == null) {
             //无收获地址，抛出异常
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
 
         Long userId = BaseContext.getCurrentId();
         List<ShoppingCart> list = shoppingCartMapper.list(ShoppingCart.builder().userId(userId).build());
-        if(list == null || list.size() == 0){
+        if (list == null || list.size() == 0) {
             throw new ShoppingCartBusinessException(MessageConstant.SHOPPING_CART_IS_NULL);
         }
 
 
         //1.向order表里添加一条数据
         Orders orders = new Orders();
-        BeanUtils.copyProperties(ordersSubmitDTO,orders);
+        BeanUtils.copyProperties(ordersSubmitDTO, orders);
         orders.setOrderTime(LocalDateTime.now());
         orders.setPayStatus(Orders.UN_PAID);
         orders.setStatus(Orders.PENDING_PAYMENT);
@@ -84,7 +86,7 @@ public class OrderServiceImpl implements OrderService{
         for (ShoppingCart shoppingCart : list) {
             OrderDetail orderDetail = OrderDetail.builder().orderId(orders.getId()).build();
             //将orderId封装进类插入数据库
-            BeanUtils.copyProperties(shoppingCart,orderDetail);//cart和detail里的数据极其类似，拷贝使用
+            BeanUtils.copyProperties(shoppingCart, orderDetail);//cart和detail里的数据极其类似，拷贝使用
             orderDetailList.add(orderDetail);
 
             //orderDetailMapper.insert(orderDetail);//批量插入优于循环插入
@@ -106,6 +108,7 @@ public class OrderServiceImpl implements OrderService{
 
         return orderSubmitVO;
     }
+
     /**
      * 订单支付
      *
@@ -156,9 +159,10 @@ public class OrderServiceImpl implements OrderService{
         orderMapper.update(orders);
     }
 
+
     @Override
     public PageResult page(OrdersPageQueryDTO ordersPageQueryDTO) {
-        PageHelper.startPage(ordersPageQueryDTO.getPage(),ordersPageQueryDTO.getPageSize());
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
 
         ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
         //获取userID
@@ -166,13 +170,13 @@ public class OrderServiceImpl implements OrderService{
         Page<Orders> page = orderMapper.page(ordersPageQueryDTO);
         List<OrderVO> orderVOS = new ArrayList<>();
         List<Orders> orders = page.getResult();
-        //todo 如果查到数据，根据orderId查询订单详情并封装
+        //如果查到数据，根据orderId查询订单详情并封装
         if (orders != null && orders.size() > 0) {
 
-            
+
             for (Orders order : orders) {
                 OrderVO orderVO = new OrderVO();
-                BeanUtils.copyProperties(order,orderVO);
+                BeanUtils.copyProperties(order, orderVO);
                 Long orderId = order.getId();
                 List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orderId);
 
@@ -182,7 +186,63 @@ public class OrderServiceImpl implements OrderService{
         }
 
 
-        return new PageResult(page.getTotal(),orderVOS);
+        return new PageResult(page.getTotal(), orderVOS);
+    }
+
+    @Override
+    public OrderVO lookDetails(Long id) {
+        //根据orderID查询detail表
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(id);
+
+        //根据orderID查询order表
+        OrderVO orderVO = orderMapper.getById(id);
+
+        //根据地址id查询地址值
+        Long addressBookId = orderVO.getAddressBookId();
+        AddressBook addressBook = addressBookMapper.getById(addressBookId);
+        String address = addressBook.getProvinceName()
+                        + addressBook.getCityName()
+                        + addressBook.getDistrictName()
+                        + addressBook.getDetail();
+        //封装进VO
+        orderVO.setOrderDetailList(orderDetails);
+        orderVO.setAddress(address);
+
+        return orderVO;
+    }
+
+    @Override
+    public void cancelOrder(Long id) {
+        //将订单状态改为取消
+        Orders orders = Orders.builder().id(id).status(Orders.CANCELLED).build();
+
+        orderMapper.update(orders);
+    }
+
+    @Override
+    public void oneMoreOrder(Long id) {
+        //查询od表，取出订单详情数据
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(id);
+
+
+        //将订单详情对象转为购物车对象
+        List<ShoppingCart> shoppingCartList =
+        orderDetails.stream().map(x -> {//匿名方法
+            ShoppingCart shoppingCart = ShoppingCart.builder()
+                    .createTime(LocalDateTime.now())
+                    .userId(BaseContext.getCurrentId())
+                    .build();
+            //为购物车附上时间和userId
+            BeanUtils.copyProperties(x,shoppingCart,"id");//注意排除id
+
+            return shoppingCart;
+        }).collect(Collectors.toList());
+
+
+
+        shoppingCartMapper.insertBatch(shoppingCartList);
+
+
     }
 
 
