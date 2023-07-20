@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Select;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface OrderMapper {
@@ -44,4 +45,6 @@ public interface OrderMapper {
 
     @Select("select * from orders where order_time < #{outTime} and status = #{status}")
     List<Orders> getTimeoutOrderByStatus(Integer status, LocalDateTime outTime);
+
+    Double sumByMap(Map map);
 }
