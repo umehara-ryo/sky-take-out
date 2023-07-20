@@ -1,5 +1,6 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -18,6 +19,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -28,7 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -47,6 +51,9 @@ public class OrderServiceImpl implements OrderService {
     private WeChatPayUtil weChatPayUtil;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private WebSocketServer webSocketServer;
+
 
     @Transactional
     @Override
@@ -157,6 +164,19 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+
+        //支付成功后发送socket消息
+
+        Map map = new HashMap();
+        map.put("type", 1);//来单提醒
+        map.put("orderId", ordersDB.getId());
+        map.put("content", "订单号： " + outTradeNo);
+
+        String json = JSON.toJSONString(map);//转成JSON字符串
+
+        webSocketServer.sendToAllClient(json);
+
+
     }
 
 
@@ -290,7 +310,6 @@ public class OrderServiceImpl implements OrderService {
         Integer deliveryInProgress = orderMapper.countStatus(Orders.DELIVERY_IN_PROGRESS);
 
 
-
         return OrderStatisticsVO.builder()
                 .confirmed(confirmed)
                 .toBeConfirmed(toBeConfirmed)
@@ -301,7 +320,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
         OrderVO orderVO = orderMapper.getById(ordersConfirmDTO.getId());
-        if(orderVO.getStatus() != Orders.TO_BE_CONFIRMED){
+        if (orderVO.getStatus() != Orders.TO_BE_CONFIRMED) {
             //判断是否为待接单
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
@@ -315,14 +334,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void cancel(OrdersCancelDTO ordersCancelDTO) {
-        OrderVO orderVO = orderMapper.getById(ordersCancelDTO.getId());
+      /*  OrderVO orderVO = orderMapper.getById(ordersCancelDTO.getId());
        if(orderVO.getStatus() == Orders.COMPLETED){
            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
        }
 
-        //已完成订单无法取消
+        //已完成订单也可以取消*/
         Orders orders = new Orders();
-        BeanUtils.copyProperties(ordersCancelDTO,orders);
+        BeanUtils.copyProperties(ordersCancelDTO, orders);
         orders.setStatus(Orders.CANCELLED);
         //TODO 取消要为客户退款 未实现
 
@@ -334,12 +353,12 @@ public class OrderServiceImpl implements OrderService {
     public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
         OrderVO orderVO = orderMapper.getById(ordersRejectionDTO.getId());
         //判断是否为待接单，不是则抛异常
-        if(orderVO.getStatus() != Orders.TO_BE_CONFIRMED){
+        if (orderVO.getStatus() != Orders.TO_BE_CONFIRMED) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
         Orders orders = new Orders();
-        BeanUtils.copyProperties(ordersRejectionDTO,orders);
+        BeanUtils.copyProperties(ordersRejectionDTO, orders);
         orders.setStatus(Orders.CANCELLED);
         //TODO 取消要为客户退款 未实现
 
@@ -350,7 +369,7 @@ public class OrderServiceImpl implements OrderService {
     public void delivery(Long id) {
         OrderVO orderVO = orderMapper.getById(id);
         //判断订单是否为已接单
-        if(orderVO.getStatus() != Orders.CONFIRMED){
+        if (orderVO.getStatus() != Orders.CONFIRMED) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
@@ -365,7 +384,7 @@ public class OrderServiceImpl implements OrderService {
     public void complete(Long id) {
         OrderVO orderVO = orderMapper.getById(id);
         //判断订单是否为派送中
-        if(orderVO.getStatus() != Orders.DELIVERY_IN_PROGRESS){
+        if (orderVO.getStatus() != Orders.DELIVERY_IN_PROGRESS) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
@@ -375,6 +394,25 @@ public class OrderServiceImpl implements OrderService {
         //设置为已完成
 
         orderMapper.update(orders);
+    }
+
+    @Override
+    public void reminder(Long id) {
+        OrderVO orderVO = orderMapper.getById(id);
+        if (orderVO == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        //使用webSocket向商家发出通知
+        Map map = new HashMap();
+        map.put("type", 2);
+        map.put("orderId", id);
+        map.put("content", "订单号： " + orderVO.getNumber());
+        String json = JSON.toJSONString(map);
+
+        webSocketServer.sendToAllClient(json);
+
+
     }
 
 

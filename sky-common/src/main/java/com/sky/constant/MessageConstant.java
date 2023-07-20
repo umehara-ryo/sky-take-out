@@ -24,5 +24,7 @@ public class MessageConstant {
     public static final String DISH_BE_RELATED_BY_SETMEAL = "現在の料理は定食に関連付けられており、削除できません";
     public static final String ORDER_STATUS_ERROR = "注文ステータスが間違っています";
     public static final String ORDER_NOT_FOUND = "注文が存在しません";
+    public static final String ORDER_TIME_OUT = "注文がタイムアウトしました";
+
 
 }
