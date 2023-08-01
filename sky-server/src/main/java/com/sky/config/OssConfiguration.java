@@ -22,6 +22,7 @@ public class OssConfiguration {
                 aliOssProperties.getAccessKeyId(),
                 aliOssProperties.getAccessKeySecret(),
                 aliOssProperties.getBucketName());
+        
 
 
     }
